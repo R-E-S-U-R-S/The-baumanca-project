@@ -1,0 +1,26 @@
+---
+version: '3'
+services:
+  postgres:
+    image: postgres:14.2
+    container_name: lego_searcher-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: qwerty12345
+      POSTGRES_DB: postgres
+
+  migration:
+    image: migrate/migrate
+    volumes:
+      - ./db/migration:/migration
+    command: ["-path", "/migration", "-database", "postgres://postgres:qwerty12345@postgres:5432/postgres?sslmode=disable", "up"]
+    depends_on:
+      - postgres
+
+#  relego:
+#    build: /Dockerfile
+#    container_name: relego
+#    ports:
+#      - "5000:5000"
