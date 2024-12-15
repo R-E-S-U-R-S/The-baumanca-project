@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div class="col-sm-6 col-lg-4 mb-4 " style="position: absolute; left: 50%; top: 10px;" >
+        <div class="card">
+            <img src={{ setinfo.image_link }} alt="set_image">
+            <div class="card-body" >
+                <h4 class="card-title"> {{ setinfo.name }}</h4>
+                <h5>{{ setinfo.parts_volume }}</h5>
+                <h5>{{ setinfo.description }}</h5>
+                <h5>{{ setinfo.relesed }}</h5>
+                <h5>{{ setinfo.theme }}</h5>
+                <h5>{{ setinfo.id }}</h5>
+                <h5>{{ setinfo.name }}</h5>
+                <a href="{{ setinfo.instruction_link }} style='font-size:40px ; font-weight:100; font-family: Geneva, Arial, Helvetica, sans-serif; text-decoration: none'">смотреть инструкцию здесь</a>
+                <p class="card-text" ></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{% extends "base.html"%}
+
+{% block title %}
+    main page
+{% endblock %}
+
+ {% block body %}
+     <form method="GET" action="/search/">
+      <input type="text" name="search_string" class="form-control" placeholder="Search..." />
+      <button type="submit" class="btn btn-light-primary font-weight-bold"></button>
+     </form>
+{% block search_results %}      {% endblock %}
+{% endblock %}
+
