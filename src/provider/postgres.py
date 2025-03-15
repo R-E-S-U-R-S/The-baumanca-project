@@ -1,4 +1,4 @@
-from psycopg2 import pool, errors
+from psycopg2 import pool, errors, connect
 from sqlalchemy.engine import row
 
 from src.errors import *
@@ -7,10 +7,9 @@ from psycopg2.extras import RealDictCursor
 from src.entity import *
 class PostgreSQL:
     def __init__(self):
-        self.connection_pool=pool.SimpleConnectionPool(1,10,user='postgres',password='qwerty12345',database='postgres')
-
+        self.connect=connect(user='postgres',password='qwerty12345',database='postgres')
     def search(self,search_string:str)->list[Set]:
-        with self.connection_pool.getconn() as conn:
+        with self.connect as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute(f"""
                 select id,name,parts_volume from public.set 
@@ -24,7 +23,7 @@ class PostgreSQL:
 
 
     def get_set_by_id(self,id:int)->Set:
-        with self.connection_pool.getconn() as conn:
+        with self.connect as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
                 select id,name,parts_volume,description, released,theme from public.set 
@@ -35,7 +34,7 @@ class PostgreSQL:
                     released=row["released"], theme=row["theme"], parts_volume=row["parts_volume"])
     def create_user(self, user:UserData)->None:
         try:
-            with self.connection_pool.getconn() as conn:
+            with self.connect as conn:
                 with conn.cursor() as cursor:
                     cursor.execute(f"""
                         insert into public.user_data(login, password) values (%s, %s)
@@ -44,7 +43,7 @@ class PostgreSQL:
             raise UserAlreadyExists
 
     def get_user_password_by_login(self, login:str)->str:
-        with self.connection_pool.getconn() as conn:
+        with self.connect as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
                     select password from public.user_data
@@ -57,7 +56,7 @@ class PostgreSQL:
                 return row["password"]
 
     def add_set_to_user(self, login:str, set_id:int)->None:
-        with self.connection_pool.getconn() as conn:
+        with self.connect as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                 select 1 from public.user_data
@@ -68,44 +67,58 @@ class PostgreSQL:
                         UPDATE public.user_data SET set_ids = set_ids || '{%s}'
                         where login = %s
                         """,(set_id,login,))
-
+                    
     def delete_set_from_user(self, login:str, set_id:int)->None:
-        with self.connection_pool.getconn() as conn:
+        with self.connect as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     UPDATE public.user_data SET set_ids = array_remove(set_ids, '%s')
                     where login = %s
                     """,(set_id,login,))
+    def get_sets_by_user(self, login:str)->list[Set]:
+        with self.connect as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                select set_ids from public.user_data
+                where login = %s
+                """,(login,))
+                user_set_ids=cursor.fetchone()
+                cursor.execute("""
+                select name,id,parts_volume from public.set
+                where id=ANY(%s)
+                """,(user_set_ids["set_ids"],))
+                rows=cursor.fetchall()
+                sets=[]
+                for result in rows:
+                    sets.append(Set(id=result["id"],name=result["name"],parts_volume=result["parts_volume"]))
+                return sets
+    def search_sets_depending_on_user_sets(self, login:str, max_parts:int )->list[Set]:
+            with self.connect as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute("""
+                    select set_ids from public.user_data
+                    where login = %s
+                    """,(login,))
+                    user_set_ids=cursor.fetchone()["set_ids"]
+                    cursor.execute("""
+                    with set_details as (select part_id, sum(quantity) as sum_quantity
+                    from public.sets_to_parts
+                    where sets_to_parts.set_id = ANY (%s)
+                    group by part_id,)
+                    , irrelevant_sets as (select distinct (set_id) as set_id
+                         from public.sets_to_parts
+                        left join set_details on set_details.part_id = public.sets_to_parts.part_id
+                         where (public.sets_to_parts.part_id != ALL (select part_id from set_details))
+                            OR (quantity > set_details.sum_quantity))
+                        select s.name,s.id,s.parts_volume from public.set as s
+                        where (s.id != ALL (select irrelevant_sets.set_id from irrelevant_sets))
+                        AND (s.id != ALL(%s);
+                    """,(user_set_ids, user_set_ids,))
+                    rows=cursor.fetchall()
+                    sets=[]
+                    for result in rows:
+                        sets.append(Set(id=result["id"],name=result["name"],parts_volume=result["parts_volume"]))
+                    return sets
 
-    # def search_by_sets(self,ids:list[int])->list[Set]:
-    #     with self.connection_pool.getconn() as conn:
-    #         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-    #             cursor.execute(f"""
-    #             select id,sum(volume) volume,color from public.part
-    #             where set_id in {ids}""")
-    #             user_set_rows = cursor.fetchall()
-    #             cursor.execute(self._search_by_sets_query_generator(user_set_rows))
-    #             result_rows = cursor.fetchall()
-    #
-    #
-    #
-    # def _search_by_sets_query_generator(self, rows:RealDictRow)->str:
-    #     where_query_str:str = ""
-    #
-    #     for i in range(0, len(rows)):
-    #         id = rows[i]["id"]
-    #         volume = rows[i]["volume"]
-    #         color = rows[i]["color"]
-    #         where_query_str += f"(id = {id} and volume <= {volume} and color = '{color}')"
-    #
-    #         if i != len(rows)-1:
-    #             where_query_str += " and "
-    #
-    #     return f"select set_id from public.part where {where_query_str}"
 
-
-
-if __name__ == '__main__':
-    c = PostgreSQL()
-    print(c.add_set_to_user("proper1999",56578))
 
