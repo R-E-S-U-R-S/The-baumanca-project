@@ -26,11 +26,11 @@ class PostgreSQL:
         with self.connect as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
-                select id,name,parts_volume,description, released, set_img_url, theme from relego.set 
+                select id,name,parts_volume, released, set_img_url, theme from relego.set 
                 where id = %s
             """, (id,))
                 row = cursor.fetchone()
-                return Set(id=row["id"], name=row["name"], description=row["description"],
+                return Set(id=row["id"], name=row["name"],
                     released=row["released"], theme=row["theme"], parts_volume=row["parts_volume"], image_link=row["set_img_url"])
     def create_user(self, user:UserData)->None:
         try:

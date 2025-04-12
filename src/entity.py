@@ -5,7 +5,6 @@ class Set(BaseModel):
     id: int
     name: str
     parts_volume: int
-    description: Optional[str] = ""
     released: Optional[int] = ""
     theme: Optional[str] = ""
     image_link: Optional[str] = ""

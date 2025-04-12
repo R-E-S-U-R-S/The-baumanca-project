@@ -1,11 +1,13 @@
+
 BEGIN;
+
+CREATE SCHEMA IF NOT exists relego;
 
 create table if not exists relego.set
 (
-    id           integer not null
+    id           text not null
         primary key,
     name         text    not null,
-    description  text,
     released     integer not null,
     theme        text    not null,
     parts_volume integer not null,
@@ -13,38 +15,42 @@ create table if not exists relego.set
 );
 
 create unique index if not exists set__name__unique_idx
-    on set (name);
+    on relego.set (name);
 
 create table if not exists relego.part
 (
-    id     integer not null,
+    id     SERIAL primary key,
     color  text    not null,
     external_id text not null,
-    PRIMARY KEY(id, color)
+    constraint part__external_id__color__unique
+    unique(external_id, color)
 );
 
-create table if not exist relego.sets_to_parts
+create table if not exists relego.sets_to_parts
 (
-    set_id integer not null
-        references relego.set,
+    set_id text not null
+        references relego.set(id) ON DELETE CASCADE,
     part_id integer not null
-        references relego.part,
+        references relego.part(id) ON DELETE CASCADE,
     quantity integer not null,
     constraint sets_to_parts_pk
     unique(set_id, part_id)
 );
 
-create index if not exists part__id_volume_color_idx
-    on part (id, volume, color);
+create index if not exists sets_to_parts__part_id_idx
+    on relego.sets_to_parts (part_id);
+
+create index if not exists sets_to_parts__quantity_idx
+    on relego.sets_to_parts (quantity);
 
 create table if not exists relego.user_data
 (
     login    text not null,
     password text not null,
-    set_ids  integer[]
+    set_ids  text[]
 );
 
 create unique index if not exists user_data__login__unique_idx
-    on user_data (login);
+    on relego.user_data (login);
 
 COMMIT;
