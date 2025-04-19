@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 class Set(BaseModel):
-    id: int
+    id: str
     name: str
     parts_volume: int
     released: Optional[int] = ""
