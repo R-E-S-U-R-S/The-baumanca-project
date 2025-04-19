@@ -19,3 +19,8 @@ with set_details as (select part_id, sum(quantity) as sum_quantity
                         select s.name,s.id,s.parts_volume from relego.set as s
                         where (s.id != ALL (select irrelevant_sets.set_id from irrelevant_sets))
                         AND (s.id != ALL(ARRAY[43247]))
+
+
+
+
+                        

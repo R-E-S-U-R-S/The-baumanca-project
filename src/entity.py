@@ -2,10 +2,9 @@ from typing import Optional
 from pydantic import BaseModel
 
 class Set(BaseModel):
-    id: int
+    id: str
     name: str
     parts_volume: int
-    description: Optional[str] = ""
     released: Optional[int] = ""
     theme: Optional[str] = ""
     image_link: Optional[str] = ""

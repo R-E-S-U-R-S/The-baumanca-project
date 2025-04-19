@@ -13,7 +13,7 @@ MAX_PARTS_QUERY_ARG="max_parts"
 service=Service()
 #todo добавить нормальные декораторы для login check
 
-@app.route('/setid/<int:id>')
+@app.route('/setid/<id>')
 def setpage(id):
     if session.get("login") is None:
         return redirect(url_for("login"))
@@ -72,7 +72,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route("/add_set_to_user/<int:set_id>", methods=["POST"])
+@app.route("/add_set_to_user/<set_id>", methods=["POST"])
 def add_to_user(set_id):
     if session.get("login") is None:
         return redirect(url_for("login"))
@@ -82,7 +82,7 @@ def add_to_user(set_id):
     return redirect(url_for("search"))
 
 
-@app.route("/delete_set_from_user/<int:set_id>", methods=["POST"])
+@app.route("/delete_set_from_user/<set_id>", methods=["POST"])
 def delete_from_user(set_id):
     if session.get("login") is None:
         return redirect(url_for("login"))

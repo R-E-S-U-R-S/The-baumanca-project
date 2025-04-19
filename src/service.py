@@ -10,13 +10,13 @@ class Service:
         return sets
 
 
-    def get_set_info_by_id(self, id:int)->Set:
+    def get_set_info_by_id(self, id:str)->Set:
         set=self.db.get_set_by_id(id)
         set.instruction_link=self._get_instruction_link_by_id(set.id)
         return set
 
 
-    def _get_instruction_link_by_id(self, id:int)->str:
+    def _get_instruction_link_by_id(self, id:str)->str:
         return f"https://www.lego.com/en-us/service/buildinginstructions/{id}"
 
     def create_user(self, user: UserData)->None:
@@ -33,7 +33,7 @@ class Service:
     def add_set_to_user(self, login: str, set_id: int) -> None:
         return self.db.add_set_to_user(login, set_id)
 
-    def delete_set_from_user(self, login:str, set_id:int)->None:
+    def delete_set_from_user(self, login:str, set_id:str)->None:
         return self.db.delete_set_from_user(login, set_id)
 
     def get_sets_by_user(self, login:str)->list[Set]:

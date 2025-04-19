@@ -1,5 +1,5 @@
-from psycopg2 import pool, errors, connect
-from sqlalchemy.engine import row
+from psycopg2 import errors, connect
+
 
 from src.errors import *
 from psycopg2.errorcodes import UNIQUE_VIOLATION
@@ -22,15 +22,15 @@ class PostgreSQL:
                 return sets
 
 
-    def get_set_by_id(self,id:int)->Set:
+    def get_set_by_id(self,id:str)->Set:
         with self.connect as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
-                select id,name,parts_volume,description, released, set_img_url, theme from relego.set 
+                select id,name,parts_volume, released, set_img_url, theme from relego.set 
                 where id = %s
             """, (id,))
                 row = cursor.fetchone()
-                return Set(id=row["id"], name=row["name"], description=row["description"],
+                return Set(id=row["id"], name=row["name"],
                     released=row["released"], theme=row["theme"], parts_volume=row["parts_volume"], image_link=row["set_img_url"])
     def create_user(self, user:UserData)->None:
         try:
@@ -55,24 +55,24 @@ class PostgreSQL:
 
                 return row["password"]
 
-    def add_set_to_user(self, login:str, set_id:int)->None:
+    def add_set_to_user(self, login:str, set_id:str)->None:
         with self.connect as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                 select 1 from relego.user_data
-                where login = %s and %s= ANY(set_ids)
+                where login = %s and %s = ANY(set_ids)
                 """,(login,set_id,))
                 if cursor.fetchone() is None:
                     cursor.execute("""
-                        UPDATE relego.user_data SET set_ids = set_ids || '{%s}'
+                        UPDATE relego.user_data SET set_ids = set_ids || %s
                         where login = %s
-                        """,(set_id,login,))
+                        """,(f"{{{set_id}}}",login,))
                     
-    def delete_set_from_user(self, login:str, set_id:int)->None:
+    def delete_set_from_user(self, login:str, set_id:str)->None:
         with self.connect as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    UPDATE relego.user_data SET set_ids = array_remove(set_ids, '%s')
+                    UPDATE relego.user_data SET set_ids = array_remove(set_ids, %s)
                     where login = %s
                     """,(set_id,login,))
     def get_sets_by_user(self, login:str)->list[Set]:
